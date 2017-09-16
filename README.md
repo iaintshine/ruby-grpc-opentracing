@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/iaintshine/ruby-grpc-opentracing.svg?branch=master)](https://travis-ci.org/iaintshine/ruby-grpc-opentracing)
+
 # GRPC::OpenTracing
 
 OpenTracing instrumentation for gRPC in Ruby.
