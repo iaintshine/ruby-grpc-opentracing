@@ -44,7 +44,7 @@ require 'helloworld_services_pb'
 require 'grpc-opentracing'
 
 def build_client(host, creds)
-  tracing_interceptor = GRPC::OpenTracing::ClientIntercetpr.new(tracer: OpenTracing.global_tracer)
+  tracing_interceptor = GRPC::OpenTracing::ClientInterceptor.new(tracer: OpenTracing.global_tracer)
   client = Helloworld::Greeter::Stub.new(host, creds)
   tracing_interceptor.intercept(client)
 end
