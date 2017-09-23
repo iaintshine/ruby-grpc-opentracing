@@ -1,6 +1,6 @@
 require "spec_helper"
 
-RSpec.describe GRPC::OpenTracing::ClientTracingInterceptor do
+RSpec.describe GRPC::OpenTracing::ClientInterceptor do
   let(:tracer) { Test::Tracer.new }
 
   describe "auto-instrumentation" do
@@ -14,7 +14,7 @@ RSpec.describe GRPC::OpenTracing::ClientTracingInterceptor do
     end
 
     it "sets operation_name service_name/method_name" do
-      expect(tracer).to have_span("helloworld.Greeter/SayHello")
+      expect(tracer).to have_span("/helloworld.Greeter/SayHello")
     end
 
     it "sets standard OT tags" do
@@ -29,17 +29,23 @@ RSpec.describe GRPC::OpenTracing::ClientTracingInterceptor do
     it "sets gRPC specific OT tags" do
       [
         ["grpc.method_type", "request_response"],
-        ["grpc.affinity", ""],
-        ["grpc.authority", ""],
-        ["grpc.call_options", ""],
-        ["grpc.compressor", ""],
-        ["grpc.deadline_millis", ""],
-        ["grpc.headers", ""],
-        ["grpc.response_headers", ""],
-        ["grpc.status_code", ""]
+        ["grpc.headers", '{}'],
+        ["grpc.request", '{"name":"Client tests"}'],
+        ["grpc.reply", '{"message":"Hello Client tests"}']
       ].each do |key, value|
         expect(tracer).to have_span.with_tag(key, value)
       end
+    end
+  end
+
+  describe "decorators usage" do
+    before do
+      client = create_client(tracer: tracer, decorators: [TestClientRequestDecorator.new])
+      client.say_hello(Helloworld::HelloRequest.new(name: "Client tests"))
+    end
+
+    it "creates a new span" do
+      expect(tracer).to have_span.with_tag("test_key", "/helloworld.Greeter/SayHello")
     end
   end
 
@@ -61,27 +67,18 @@ RSpec.describe GRPC::OpenTracing::ClientTracingInterceptor do
     end
   end
 
-  describe "span context injection" do
-    before do
-      client = create_client(tracer: tracer)
-      client.say_hello(Helloworld::HelloRequest.new(name: "Client tests"))
-    end
-
-    it "propagates span context through headers" do
-      grpc_client_span = tracer.finished_spans.last
-      # TODO: requires some extension to tracing matchers
-    end
-  end
-
   def create_client(**fields)
     host = 'localhost:50051'
     creds = :this_channel_is_insecure
-    headers = {
-      'grpc.primary_user_agent' => 'grpc-opentracing-tests'
-    }
 
-    channel = GRPC::Core::Channel.new(host, headers, creds)
-    tracing_interceptor = GRPC::OpenTracing::ClientTracingInterceptor.new(**fields)
-    Helloworld::Greeter::Stub.new(host, creds, channel_override: tracing_interceptor.intercept(channel))
+    tracing_interceptor = GRPC::OpenTracing::ClientInterceptor.new(**fields)
+    client = Helloworld::Greeter::Stub.new(host, creds)
+    tracing_interceptor.intercept(client)
+  end
+
+  class TestClientRequestDecorator
+    def call(span, method, request, response, error)
+      span.set_tag("test_key", method)
+    end
   end
 end

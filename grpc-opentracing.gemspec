@@ -24,7 +24,9 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_dependency 'grpc'
+  spec.add_dependency "multi_json"
   spec.add_dependency 'opentracing', '~> 0.3.1'
+  spec.add_dependency "method-tracer", "~> 1.1"
 
   spec.add_development_dependency "test-tracer", "~> 1.0", ">= 1.2.1"
   spec.add_development_dependency "tracing-matchers", "~> 1.0", ">= 1.3.0"
