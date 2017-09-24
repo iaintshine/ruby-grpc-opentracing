@@ -97,6 +97,33 @@ main
 * `active_span: Proc` an active span provider. Default: `nil`.
 * `decorators: Array[SpanDecorator]` a lists of span decorators. Default to `[RequestReplySpanDecorator]`
 
+## Decorators
+
+Traced spans can be customized through decorators - `SpanDecorator` class. They're called once the processing of a request is done, no matter if the processing has finished with success or failure. 
+
+You can provide a set of decorators during an interceptor creation e.g.
+
+```ruby
+class RequestSpanDecorator
+  def self.call(span, method, request, response, error)
+    span.set_tag('grpc.request', request.to_json) if request
+  end
+end
+
+tracing_interceptor = GRPC::OpenTracing::ServerInterceptor.new(decorators: [RequestSpanDecorator])
+tracing_interceptor = GRPC::OpenTracing::ClientInterceptor.new(decorators: [RequestSpanDecorator])
+```
+
+Notice that by default `RequestReplySpanDecorator` is attached, so if you want to preserve the behaviour make sure to append it to the `decorators` list.
+
+### Decorator arguments 
+
+* `span: OpenTracing::Span` the current active span. 
+* `method: String` current method name in the `/service_name/method_name` form.
+* `request` an instance of gRPC message class e.g. `Helloworld::HelloRequest`.
+* `response` an instance of gRPC message class e.g. `Helloworld::HelloReply`.
+* `error: Exception` an exception. Set in case of processing failure.
+
 ## Development
 
 After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake spec` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
