@@ -1,6 +1,6 @@
 module GRPC
   module OpenTracing
-    class ClientSpanDecorator
+    class SpanDecorator
       def call(span, method, request, response, error)
       end
     end
