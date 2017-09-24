@@ -6,10 +6,21 @@ class GreeterServer < Helloworld::Greeter::Service
   end
 
   class Controller
-    def initialize(host: '0.0.0.0:50051')
+    @@port = 0
+
+    class << self
+      def next_port
+        @@port += 1
+      end
+    end
+
+    attr_reader :host
+
+    def initialize(service: GreeterServer)
+      @host = "0.0.0.0:5005#{self.class.next_port}"
       @server = GRPC::RpcServer.new
       @server.add_http2_port(host, :this_port_is_insecure)
-      @server.handle(GreeterServer)
+      @server.handle(service)
     end
 
     def start
@@ -19,6 +30,7 @@ class GreeterServer < Helloworld::Greeter::Service
     def stop
       @server.stop
       @server_thread.join
+      @server_thread.terminate
     end
   end
 end

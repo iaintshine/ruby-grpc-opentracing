@@ -14,7 +14,7 @@ RSpec.describe GRPC::OpenTracing::ClientInterceptor do
 
   describe "auto-instrumentation" do
     before do
-      client = create_client(tracer: tracer)
+      client = create_client(@server_controller.host, tracer: tracer)
       client.say_hello(Helloworld::HelloRequest.new(name: "Client tests"))
     end
 
@@ -35,7 +35,7 @@ RSpec.describe GRPC::OpenTracing::ClientInterceptor do
       end
     end
 
-    it "sets gRPC specific OT tags" do
+    it "sets gRPC RequestReplySpanDecorator specific OT tags" do
       [
         ["grpc.method_type", "request_response"],
         ["grpc.headers", '{}'],
@@ -49,11 +49,11 @@ RSpec.describe GRPC::OpenTracing::ClientInterceptor do
 
   describe "decorators usage" do
     before do
-      client = create_client(tracer: tracer, decorators: [TestClientRequestDecorator.new])
+      client = create_client(@server_controller.host, tracer: tracer, decorators: [TestSpanDecorator])
       client.say_hello(Helloworld::HelloRequest.new(name: "Client tests"))
     end
 
-    it "creates a new span" do
+    it "sets custom tag on client span" do
       expect(tracer).to have_span.with_tag("test_key", "/helloworld.Greeter/SayHello")
     end
   end
@@ -62,7 +62,7 @@ RSpec.describe GRPC::OpenTracing::ClientInterceptor do
     let(:root_span) { tracer.start_span("root") }
 
     before do
-      client = create_client(tracer: tracer, active_span: -> { root_span })
+      client = create_client(@server_controller.host, tracer: tracer, active_span: -> { root_span })
       client.say_hello(Helloworld::HelloRequest.new(name: "Client tests"))
     end
 
@@ -76,18 +76,11 @@ RSpec.describe GRPC::OpenTracing::ClientInterceptor do
     end
   end
 
-  def create_client(**fields)
-    host = 'localhost:50051'
+  def create_client(host, **fields)
     creds = :this_channel_is_insecure
 
     tracing_interceptor = GRPC::OpenTracing::ClientInterceptor.new(**fields)
     client = Helloworld::Greeter::Stub.new(host, creds)
     tracing_interceptor.intercept(client)
-  end
-
-  class TestClientRequestDecorator
-    def call(span, method, request, response, error)
-      span.set_tag("test_key", method)
-    end
   end
 end

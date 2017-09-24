@@ -6,8 +6,19 @@ require "grpc/opentracing"
 require "support/helloworld"
 require "support/greeter_client"
 require "support/greeter_server"
+require "support/test_span_decorator"
 
 require "pry"
+
+if ENV['verbose']
+  require "logger"
+
+  module GRPC
+    def self.logger
+      @logger ||= Logger.new(STDOUT)
+    end
+  end
+end
 
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure

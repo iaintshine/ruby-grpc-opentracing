@@ -61,12 +61,12 @@ main
 
 * `tracer: OpenTracing::Tracer` an OT compatible tracer. Default `OpenTracing.global_tracer`
 * `active_span: Proc` an active span provider. Default: `nil`.
-* `decorators: Array[ClientSpanDecorator]` a lists of client span decorators. Default to `[RequestReplySpanDecorator]`
+* `decorators: Array[SpanDecorator]` a lists of span decorators. Default to `[RequestReplySpanDecorator]`
 
 ## Server Tracing
 
 - Instantiate a tracer
-- Create a `GRPC::OpenTracing::ServerTracingInterceptor`
+- Create a `GRPC::OpenTracing::ServerInterceptor`
 - Intercept a service
 
 ```ruby
@@ -81,7 +81,7 @@ class GreeterServer < Helloworld::Greeter::Service
 end
 
 def main
-  tracing_interceptor = GRPC::OpenTracing::ServerTracingInterceptor.new(tracer: OpenTracing.global_tracer)
+  tracing_interceptor = GRPC::OpenTracing::ServerInterceptor.new(tracer: OpenTracing.global_tracer)
   s = GRPC::RpcServer.new
   s.add_http2_port('0.0.0.0:50051', :this_port_is_insecure)
   s.handle(tracing_interceptor.intercept(GreeterServer))
@@ -95,7 +95,7 @@ main
 
 * `tracer: OpenTracing::Tracer` an OT compatible tracer. Default `OpenTracing.global_tracer`
 * `active_span: Proc` an active span provider. Default: `nil`.
-* `operation_name: Proc` an operation name provider. Default to `ServerName.method_name`
+* `decorators: Array[SpanDecorator]` a lists of span decorators. Default to `[RequestReplySpanDecorator]`
 
 ## Development
 

@@ -3,7 +3,7 @@ module GRPC
     class ClientInterceptor
       attr_reader :tracer, :active_span, :decorators
 
-      def initialize(tracer: ::OpenTracing.global_tracer, active_span: nil, decorators: [RequestReplyClientSpanDecorator.new])
+      def initialize(tracer: ::OpenTracing.global_tracer, active_span: nil, decorators: [RequestReplySpanDecorator])
         @tracer = tracer
         @active_span = active_span
         @decorators = decorators
@@ -33,7 +33,7 @@ module GRPC
             current_span = @tracer.start_span(method, child_of: active_span, tags: tags)
 
             hpack_carrier = HPACKCarrier.new(metadata)
-            @tracer.inject(current_span.context, ::OpenTracing::FORMAT_RACK, hpack_carrier)
+            @tracer.inject(current_span.context, ::OpenTracing::FORMAT_TEXT_MAP, hpack_carrier)
 
             response = request_response_without_instrumentation(method, req, marshal, unmarshal,
                                                                 metadata: metadata, **fields)
