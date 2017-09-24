@@ -9,10 +9,6 @@ require "support/greeter_server"
 
 require "pry"
 
-server = create_server
-server_thread = Thread.new { server.run_till_terminated }
-at_exit { server.stop; server_thread.join }
-
 RSpec.configure do |config|
   # Enable flags like --only-failures and --next-failure
   config.example_status_persistence_file_path = ".rspec_status"
