@@ -4,13 +4,21 @@ class GreeterServer < Helloworld::Greeter::Service
   def say_hello(hello_req, _unused_call)
     Helloworld::HelloReply.new(message: "Hello #{hello_req.name}")
   end
-end
 
-# main starts an RpcServer that receives requests to GreeterServer at the sample
-# server port.
-def create_server(host: '0.0.0.0:50051')
-  s = GRPC::RpcServer.new
-  s.add_http2_port(host, :this_port_is_insecure)
-  s.handle(GreeterServer)
-  s
+  class Controller
+    def initialize(host: '0.0.0.0:50051')
+      @server = GRPC::RpcServer.new
+      @server.add_http2_port(host, :this_port_is_insecure)
+      @server.handle(GreeterServer)
+    end
+
+    def start
+      @server_thread = Thread.new { @server.run_till_terminated }
+    end
+
+    def stop
+      @server.stop
+      @server_thread.join
+    end
+  end
 end

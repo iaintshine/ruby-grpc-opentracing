@@ -3,6 +3,15 @@ require "spec_helper"
 RSpec.describe GRPC::OpenTracing::ClientInterceptor do
   let(:tracer) { Test::Tracer.new }
 
+  before :all do
+    @server_controller = GreeterServer::Controller.new
+    @server_controller.start
+  end
+
+  after :all do
+    @server_controller.stop
+  end
+
   describe "auto-instrumentation" do
     before do
       client = create_client(tracer: tracer)
