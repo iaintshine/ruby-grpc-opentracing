@@ -25,7 +25,7 @@ Gem::Specification.new do |spec|
 
   spec.add_dependency 'grpc'
   spec.add_dependency "multi_json"
-  spec.add_dependency 'opentracing', '~> 0.3.1'
+  spec.add_dependency 'opentracing', '~> 0.5.0'
   spec.add_dependency "method-tracer", "~> 1.1"
 
   spec.add_development_dependency "test-tracer", "~> 1.0", ">= 1.2.1"
