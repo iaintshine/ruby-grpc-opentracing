@@ -51,7 +51,8 @@ module GRPC
                   }
                   hpack_carrier = HPACKCarrier.new(active_call.metadata)
                   parent_span_context = tracer.extract(::OpenTracing::FORMAT_TEXT_MAP, hpack_carrier)
-                  current_span = tracer.start_span(route.to_s, child_of: parent_span_context, tags: tags)
+                  current_scope = tracer.start_active_span(route.to_s, child_of: parent_span_context, tags: tags)
+                  current_span = current_scope.span
 
                   response = self.send(method_name_without_instrumentation, req, active_call)
 
@@ -68,7 +69,7 @@ module GRPC
                       decorator.call(current_span, route, req, response, e)
                     end
                   end
-                  current_span.finish if current_span
+                  current_scope.close if current_scope
                 end
               end
             end
