@@ -30,7 +30,8 @@ module GRPC
               'grpc.method_type' => 'request_response',
               'grpc.headers' => MultiJson.dump(metadata)
             }
-            current_span = @tracer.start_span(method, child_of: active_span, tags: tags)
+            current_scope = @tracer.start_active_span(method, child_of: active_span, tags: tags)
+            current_span = current_scope.span
 
             hpack_carrier = HPACKCarrier.new(metadata)
             @tracer.inject(current_span.context, ::OpenTracing::FORMAT_TEXT_MAP, hpack_carrier)
@@ -51,7 +52,7 @@ module GRPC
                 decorator.call(current_span, method, req, response, e)
               end
             end
-            current_span.finish if current_span
+            current_scope.close if current_scope
           end
         end
 
